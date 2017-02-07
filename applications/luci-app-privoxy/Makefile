@@ -10,7 +10,7 @@ PKG_NAME:=luci-app-privoxy
 
 # Version == major.minor.patch
 # increase "minor" on new functionality and "patch" on patches/optimization
-PKG_VERSION:=1.0.3
+PKG_VERSION:=1.0.6
 
 # Release == build
 # increase on changes of translation files
@@ -33,6 +33,6 @@ help
 	$(PKG_MAINTAINER)
 endef
 
-include $(TOPDIR)/feeds/luci/luci.mk
+include ../../luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature

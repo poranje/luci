@@ -23,6 +23,7 @@ LUCI_LANG.he=עִבְרִית (Hebrew)
 LUCI_LANG.hu=Magyar (Hungarian)
 LUCI_LANG.it=Italiano (Italian)
 LUCI_LANG.ja=日本語 (Japanese)
+LUCI_LANG.ko=한국어 (Korean)
 LUCI_LANG.ms=Bahasa Melayu (Malay)
 LUCI_LANG.no=Norsk (Norwegian)
 LUCI_LANG.pl=Polski (Polish)
@@ -30,7 +31,7 @@ LUCI_LANG.pt-br=Português do Brasil (Brazialian Portuguese)
 LUCI_LANG.pt=Português (Portuguese)
 LUCI_LANG.ro=Română (Romanian)
 LUCI_LANG.ru=Русский (Russian)
-LUCI_LANG.sk=Slovenčina (Slovene)
+LUCI_LANG.sk=Slovenčina (Slovak)
 LUCI_LANG.sv=Svenska (Swedish)
 LUCI_LANG.tr=Türkçe (Turkish)
 LUCI_LANG.uk=украї́нська (Ukrainian)
@@ -64,6 +65,19 @@ PKG_VERSION?=$(if $(DUMP),x,$(strip $(shell \
 		revision="unknown"; \
 	fi; \
 	echo "$$revision" \
+)))
+
+PKG_GITBRANCH?=$(if $(DUMP),x,$(strip $(shell \
+	variant="LuCI"; \
+	if git log -1 >/dev/null 2>/dev/null; then \
+		branch="$$(git symbolic-ref --short -q HEAD 2>/dev/null)"; \
+		if [ "$$branch" != "master" ]; then \
+			variant="LuCI $$branch branch"; \
+		else \
+			variant="LuCI Master"; \
+		fi; \
+	fi; \
+	echo "$$variant" \
 )))
 
 PKG_RELEASE?=1
@@ -121,7 +135,7 @@ endef
 
 ifneq ($(wildcard ${CURDIR}/src/Makefile),)
  MAKE_PATH := src/
- MAKE_VARS += FPIC="$(FPIC)" LUCI_VERSION="$(PKG_VERSION)"
+ MAKE_VARS += FPIC="$(FPIC)" LUCI_VERSION="$(PKG_VERSION)" LUCI_GITBRANCH="$(PKG_GITBRANCH)"
 
  define Build/Compile
 	$(call Build/Compile/Default,clean compile)
@@ -137,9 +151,16 @@ LUCI_LIBRARYDIR = $(LUA_LIBRARYDIR)/luci
 
 define SrcDiet
 	$(FIND) $(1) -type f -name '*.lua' | while read src; do \
-		if $(STAGING_DIR_HOST)/bin/lua $(STAGING_DIR_HOST)/bin/LuaSrcDiet \
-			--noopt-binequiv -o "$$$$src.o" "$$$$src"; \
+		if LuaSrcDiet --noopt-binequiv -o "$$$$src.o" "$$$$src"; \
 		then mv "$$$$src.o" "$$$$src"; fi; \
+	done
+endef
+
+define SubstituteVersion
+	$(FIND) $(1) -type f -name '*.htm' | while read src; do \
+		$(SED) 's/<%# *\([^ ]*\)PKG_VERSION *%>/\1$(PKG_VERSION)/g' \
+		    -e 's/"\(<%= *\(media\|resource\) *%>[^"]*\.\(js\|css\)\)"/"\1?v=$(PKG_VERSION)"/g' \
+			"$$$$src"; \
 	done
 endef
 
@@ -149,6 +170,7 @@ define Package/$(PKG_NAME)/install
 	  cp -pR $(PKG_BUILD_DIR)/luasrc/* $(1)$(LUCI_LIBRARYDIR)/; \
 	  $(FIND) $(1)$(LUCI_LIBRARYDIR)/ -type f -name '*.luadoc' | $(XARGS) rm; \
 	  $(if $(CONFIG_LUCI_SRCDIET),$(call SrcDiet,$(1)$(LUCI_LIBRARYDIR)/),true); \
+	  $(call SubstituteVersion,$(1)$(LUCI_LIBRARYDIR)/); \
 	else true; fi
 	if [ -d $(PKG_BUILD_DIR)/htdocs ]; then \
 	  $(INSTALL_DIR) $(1)$(HTDOCS); \
@@ -182,7 +204,7 @@ define LuciTranslation
     CATEGORY:=LuCI
     TITLE:=$(PKG_NAME) - $(1) translation
     HIDDEN:=1
-    DEFAULT:=LUCI_LANG_$(1)||ALL
+    DEFAULT:=LUCI_LANG_$(1)||(ALL&&m)
     DEPENDS:=$(PKG_NAME)
     PKGARCH:=all
   endef

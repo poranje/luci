@@ -187,9 +187,9 @@ function _list_expand( c, l, nopad )
 			end
 
 			if n:find("(%w+)ses") then
-				k = n:gsub("(%w+)ses", "%1s")
+				k = n:gsub("(%w+)ses$", "%1s")
 			else
-				k = n:gsub("(%w+)s", "%1")
+				k = n:gsub("(%w+)s$", "%1")
 			end
 
 			str = str .. _expand( c[n], k, nopad )
@@ -273,6 +273,12 @@ plugins = {
 		{ }
 	},
 
+	cpufreq	= {
+		{ },
+		{ },
+		{ }
+	},
+
 	csv	= {
 		{ "DataDir" },
 		{ "StoreRates" },
@@ -299,6 +305,12 @@ plugins = {
 
 	email	= {
 		{ "SocketFile", "SocketGroup", "SocketPerms", "MaxConns" },
+		{ },
+		{ }
+	},
+
+	entropy = {
+		{ },
 		{ },
 		{ }
 	},
@@ -369,6 +381,12 @@ plugins = {
 		{ }
 	},
 
+	openvpn = {
+		{ },
+		{ "CollectIndividualUsers", "CollectUserCount", "CollectCompression", "ImprovedNamingSchema" },
+		{ "StatusFile" }
+	},
+
 	ping	= {
 		{ "TTL", "Interval" },
 		{ },
@@ -387,6 +405,12 @@ plugins = {
 		{ "RRATimespans" }
 	},
 
+	sensors = {
+		{ },
+		{ "IgnoreSelected" },
+		{ "Sensor" }
+	},
+
         splash_leases = {
           { },
           { },
@@ -397,6 +421,12 @@ plugins = {
 		{ },
 		{ "ListeningPorts" },
 		{ "LocalPorts", "RemotePorts" }
+	},
+
+	thermal	= {
+		{ },
+		{ "IgnoreSelected" },
+		{ "Device" }
 	},
 
 	unixsock = {
